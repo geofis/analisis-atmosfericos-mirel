@@ -1,0 +1,42 @@
+---
+title: "Análisis de datos atmosféricos"
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instalar paquete S5Processor
+
+```{r}
+#devtools::install_github("MBalthasar/S5Processor")
+```
+
+## Cargar paquetes
+
+```{r}
+library(S5Processor)
+library(raster)
+```
+
+Cargar datos
+
+```{r}
+f <- 'S5P_NRTI_L2__NO2____20191209T173610_20191209T174110_11170_01_010302_20191209T182308.nc'
+nc <- ncdf4::nc_open(f)
+vars <- attributes(nc$var)$names
+p <- 6
+p
+ncr <- S5P_process(input = f, product = p)
+ncr
+```
+
+## Exportar
+
+```{r}
+writeRaster(ncr, paste0(gsub('.nc', '', f), '_', gsub('/','_', vars[p]), '.tif'), overwrite=T)
+```
+
