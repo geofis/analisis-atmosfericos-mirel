@@ -40,3 +40,14 @@ ncr
 writeRaster(ncr, paste0(gsub('.nc', '', f), '_', gsub('/','_', vars[p]), '.tif'), overwrite=T)
 ```
 
+## Instalar sentinelsat (API de Sentinel)
+
+```{bash}
+git clone https://github.com/sentinelsat/sentinelsat.git
+sudo apt install python-pip
+pip install sentinelsat
+sudo find / -type f -iname '*sentinelsat*'
+/home/mirel/.local/bin/sentinelsat -u s5pguest -p s5pguest -g /home/mirel/Documents/analisis-atmosfericos-mirel/descargas/rd.geojson --sentinel 5 -s 20181018 -e 20191018 --url "https://s5phub.copernicus.eu/dhus" --producttype L2__NO2___
+#Para descargar, agrega flag -d, ejemplo:
+/home/mirel/.local/bin/sentinelsat -u s5pguest -p s5pguest -d -g /home/mirel/Documents/analisis-atmosfericos-mirel/descargas/rd.geojson --sentinel 5 -s 20181018 -e 20181019 --url "https://s5phub.copernicus.eu/dhus" --producttype L2__NO2___
+```
