@@ -51,3 +51,11 @@ sudo find / -type f -iname '*sentinelsat*'
 #Para descargar, agrega flag -d, ejemplo:
 /home/mirel/.local/bin/sentinelsat -u s5pguest -p s5pguest -d -g /home/mirel/Documents/analisis-atmosfericos-mirel/descargas/rd.geojson --sentinel 5 -s 20181018 -e 20181019 --url "https://s5phub.copernicus.eu/dhus" --producttype L2__NO2___
 ```
+
+# Extraer fecha de archivos
+
+```{r}
+archivos <- list.files(path='.', pattern='S5P*')
+fechas <- substr(gsub('S5P.*_2', '2', archivos), start=1, stop=8)
+```
+
