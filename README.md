@@ -27,14 +27,14 @@ library(readr)
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ─────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ──────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.2.1     ✔ purrr   0.3.2
     ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
     ## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
     ## ✔ ggplot2 3.2.1     ✔ forcats 0.4.0
 
-    ## ── Conflicts ────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ tidyr::extract() masks raster::extract()
     ## ✖ dplyr::filter()  masks stats::filter()
     ## ✖ dplyr::lag()     masks stats::lag()
@@ -44,6 +44,8 @@ Cargar
 datos
 
 ``` r
+# f <- 'S5P_OFFL_L2__NO2____20190401T171141_20190401T185312_07595_01_010300_20190407T185548.nc'
+# f <- 'S5P_OFFL_L2__NO2____20200401T174952_20200401T193122_12788_01_010302_20200403T102954.nc'
 f <- 'S5P_NRTI_L2__NO2____20191209T173610_20191209T174110_11170_01_010302_20191209T182308.nc'
 nc <- ncdf4::nc_open(f)
 vars <- attributes(nc$var)$names
