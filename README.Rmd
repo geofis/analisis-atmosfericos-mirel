@@ -20,6 +20,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(S5Processor)
 library(raster)
+library(rgdal)
 library(sf)
 library(readr)
 library(tidyverse)
@@ -91,5 +92,27 @@ sapply(
     )
   }
 )
+```
+
+## Estadística zonal por lotes
+
+```{r}
+rutalotes <- 'descargas/asis'
+archivosraw <- list.files(rutalotes, pattern = '*.zip', full.names = T)
+subzipnc <- gsub('.zip$', '.nc', archivosraw)
+file.rename(archivosraw, subzipnc)
+archivosnc <- list.files(rutalotes, pattern = '*.nc', full.names = T)
+sapply(
+  archivosnc,
+  function(x) {
+    nc <- ncdf4::nc_open(x)
+    vars <- attributes(nc$var)$names
+    p <- grep('nitrogendioxide_tropospheric_column$', vars)
+    p
+    ncr <- S5P_process(input = x, product = 6)
+    writeRaster(ncr, paste0(gsub('.nc', '', x), '_', gsub('/','_', vars[p]), '.tif'), overwrite=T)
+  }
+)
+
 ```
 
