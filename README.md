@@ -1,47 +1,27 @@
 Análisis de datos atmosféricos
 ================
 
-## Instalar paquete S5Processor
+Instalar paquete S5Processor
+----------------------------
 
 ``` r
 #devtools::install_github("MBalthasar/S5Processor")
 ```
 
-## Cargar paquetes
+Cargar paquetes
+---------------
 
 ``` r
 library(S5Processor)
 library(raster)
-```
-
-    ## Loading required package: sp
-
-``` r
+library(rgdal)
 library(sf)
-```
-
-    ## Linking to GEOS 3.6.2, GDAL 2.2.3, PROJ 4.9.3
-
-``` r
 library(readr)
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ──────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ ggplot2 3.2.1     ✔ purrr   0.3.2
-    ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
-    ## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
-    ## ✔ ggplot2 3.2.1     ✔ forcats 0.4.0
-
-    ## ── Conflicts ─────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ tidyr::extract() masks raster::extract()
-    ## ✖ dplyr::filter()  masks stats::filter()
-    ## ✖ dplyr::lag()     masks stats::lag()
-    ## ✖ dplyr::select()  masks raster::select()
-
-Cargar
-datos
+Cargar datos
+------------
 
 ``` r
 # f <- 'S5P_OFFL_L2__NO2____20190401T171141_20190401T185312_07595_01_010300_20190407T185548.nc'
@@ -55,13 +35,15 @@ ncr <- S5P_process(input = f, product = p)
 ncr
 ```
 
-## Exportar
+Exportar
+--------
 
 ``` r
 writeRaster(ncr, paste0(gsub('.nc', '', f), '_', gsub('/','_', vars[p]), '.tif'), overwrite=T)
 ```
 
-## Instalar sentinelsat (API de Sentinel)
+Instalar sentinelsat (API de Sentinel)
+--------------------------------------
 
 ``` bash
 git clone https://github.com/sentinelsat/sentinelsat.git
@@ -75,7 +57,8 @@ sudo find / -type f -iname '*sentinelsat*'
 /home/mirel/.local/bin/sentinelsat -u s5pguest -p s5pguest -d -g /home/mirel/Documents/analisis-atmosfericos-mirel/descargas/rd.geojson --sentinel 5 -s 20181018 -e 20181019 --url "https://s5phub.copernicus.eu/dhus" --producttype L2__NO2___
 ```
 
-# Revisar y descargar pendientes (ejecutar al finalizar la descarga por fecha)
+Revisar y descargar pendientes (ejecutar al finalizar la descarga por fecha)
+----------------------------------------------------------------------------
 
 ``` r
 fp <- st_read('descargas/footprints-20181018-20191018.geojson')
@@ -108,3 +91,28 @@ sapply(
   }
 )
 ```
+
+Renombrar ZIP y generar TIFF por lotes
+--------------------------------------
+
+``` r
+rutalotes <- 'descargas/asis'
+archivosraw <- list.files(rutalotes, pattern = '*.zip', full.names = T)
+subzipnc <- gsub('.zip$', '.nc', archivosraw)
+file.rename(archivosraw, subzipnc)
+archivosnc <- list.files(rutalotes, pattern = '*.nc', full.names = T)
+sapply(
+  archivosnc,
+  function(x) {
+    nc <- ncdf4::nc_open(x)
+    vars <- attributes(nc$var)$names
+    p <- grep('nitrogendioxide_tropospheric_column$', vars)
+    p
+    ncr <- S5P_process(input = x, product = 6)
+    writeRaster(ncr, paste0(gsub('.nc', '', x), '_', gsub('/','_', vars[p]), '.tif'), overwrite=T)
+  }
+)
+```
+
+Recortar rásters y generar estadística zonal por lotes
+------------------------------------------------------
