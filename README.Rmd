@@ -8,7 +8,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
-    eval = F)
+    eval = T)
 ```
 
 ## Instalar paquete S5Processor
@@ -26,6 +26,11 @@ library(rgdal)
 library(sf)
 library(readr)
 library(tidyverse)
+library(tmap)
+basegeofispath <- 'https://raw.githubusercontent.com/geofis/'
+devtools::source_url(paste0(
+  basegeofispath,
+  'geomorpho90m-tools/master/estadistica_zonal_objetos.R'))
 ```
 
 ## Cargar datos
@@ -98,7 +103,7 @@ sapply(
 
 ## Renombrar ZIP y generar TIFF por lotes
 
-```{r}
+```{r,eval=F}
 rutalotes <- 'descargas/asis'
 archivosraw <- list.files(rutalotes, pattern = '*.zip', full.names = T)
 subzipnc <- gsub('.zip$', '.nc', archivosraw)
@@ -117,9 +122,50 @@ sapply(
 )
 ```
 
-## Recortar rásters y generar estadística zonal por lotes
+## Recortar rásters
 
-```{r}
-
+```{r, eval=T}
+tifs <- list.files('descargas/asis/', pattern = '*.tif', full.names = T)
+prov <- st_read('descargas/provincias.geojson')
 ```
 
+```{r, eval=F}
+provbuffer <- st_buffer(prov, res(raster(tifs[1]))[1]) %>% st_union
+st_write(provbuffer, 'descargas/provincias_buffer.geojson')
+sapply(
+  tifs,
+  function(x){
+    system(
+      paste('gdalwarp -overwrite -cutline descargas/provincias_buffer.geojson -crop_to_cutline',
+             x, gsub('\\.tif', '_crop.tif', x))
+    )
+  }
+)
+```
+
+## Estadística zonal por lotes, mapas
+
+```{r}
+tifscropped <- list.files('descargas/asis/', pattern = '*_crop.tif', full.names = T)
+estzonal <- sapply(
+  tifscropped,
+  function(x){
+    fecha <- gsub('_.*', '', gsub('^.*NO2____', '', x))
+    r <- raster(x)
+    f <- ezonalobj(objraster = r, nombre = paste0('fecha_',fecha),
+              objgeometrias = prov,
+              export = F, cuali = F)
+    return(f)
+  },
+  simplify = F
+)
+map(estzonal, function(x) x)
+estzonalagreg <- bind_cols(map(estzonal, function(x) x %>% select(matches('media$|ENLACE')))) %>%
+  select(-matches('ENLACE*|geometry*'))
+estzonalagreg %>% plot
+estzonalagreg %>% gather(variable, valor, -geometry) %>% tm_shape() +
+  tm_fill(col='valor', palette = "YlOrBr", size = 0.1, style = 'jenks') +
+  tm_borders(col = 'grey15', lwd = 0.3) +
+  tm_facets(by = "variable", ncol = 1, free.coords = FALSE, free.scales = TRUE) +
+  tm_layout(panel.label.size = 2, legend.title.size = 1.5, legend.text.size = 1.5)
+```
